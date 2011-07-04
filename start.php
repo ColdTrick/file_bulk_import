@@ -3,13 +3,17 @@
 	
 	define("FILE_BULK_IMPORT_BASEURL", 	$CONFIG->wwwroot."pg/file_bulk_import");
 	
-	include_once(dirname(__FILE__)."/lib/functions.php");
 
 	function file_bulk_import_init()
 	{
 		global $CONFIG;
-			
-		register_page_handler("file_bulk_import", 	"file_bulk_import_page_handler");
+		
+		if(is_plugin_enabled('file'))
+		{
+			include_once(dirname(__FILE__)."/lib/functions.php");
+				
+			register_page_handler("file_bulk_import", 	"file_bulk_import_page_handler");
+		}
 	}
 	
 	function file_bulk_import_page_handler($page)

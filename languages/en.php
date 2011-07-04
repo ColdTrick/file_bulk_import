@@ -15,7 +15,7 @@
 		'file_bulk_import:error:fileuploadsuccess' => 'Zip file uploaded and extracted successfully.',
 	
 		//settings
-		'file_bulk_import:settings:allowed_extensions' => 'Allowed extension',
+		'file_bulk_import:settings:allowed_extensions' => 'Allowed extensions (comma seperated)',
 	);
 	
 	add_translation('en', $english);
