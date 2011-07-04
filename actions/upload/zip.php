@@ -1,6 +1,6 @@
 <?php 
 
-	$allowed_extensions = zip_uploader_allowed_extensions();
+	$allowed_extensions = file_bulk_import_allowed_extensions();
 	
 	$container_guid = get_input('container_guid', get_loggedin_userid());
 	
@@ -78,26 +78,26 @@
 				
 				if($_SESSION['extracted_files'])
 				{
-					system_message(elgg_echo('zip_uploader:error:fileuploadsuccess'));
+					system_message(elgg_echo('file_bulk_import:error:fileuploadsuccess'));
 				}
 				else
 				{
-					register_error(elgg_echo('zip_uploader:error:nofilesextracted'));
+					register_error(elgg_echo('file_bulk_import:error:nofilesextracted'));
 				}
 			}
 			else
 			{
-				register_error(elgg_echo('zip_uploader:error:cantopenfile'));
+				register_error(elgg_echo('file_bulk_import:error:cantopenfile'));
 			}
 		}
 		else
 		{
-			register_error(elgg_echo('zip_uploader:error:nozipfilefound'));
+			register_error(elgg_echo('file_bulk_import:error:nozipfilefound'));
 		}
 	}
 	else
 	{
-		register_error(elgg_echo('zip_uploader:error:nofilefound'));
+		register_error(elgg_echo('file_bulk_import:error:nofilefound'));
 	}
 	
 	forward(REFERER);

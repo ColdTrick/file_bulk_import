@@ -6,7 +6,7 @@
 		
 	if($page_owner)
 	{
-		$title_text = elgg_echo("zip_uploader:upload:new");
+		$title_text = elgg_echo("file_bulk_import:upload:new");
 		
 		$form = elgg_view("file_bulk_import/forms/zip/upload");
 	
@@ -34,6 +34,6 @@
 	}
 	else 
 	{
-		register_error(elgg_echo("zip_uploader:error:pageowner"));
+		register_error(elgg_echo("file_bulk_import:error:pageowner"));
 		forward();
 	}

@@ -41,7 +41,7 @@
 		return 'Zip File error: unknown';
 	}
 	
-	function zip_uploader_allowed_extensions()
+	function file_bulk_import_allowed_extensions()
 	{
 		$result = false;
 		
@@ -50,7 +50,7 @@
 		if(!empty($allowed_extensions_settings))
 		{
 			$allowed_extensions = explode(',', $allowed_extensions_settings);
-			array_walk($allowed_extensions, 'zip_uploader_trim_array_values');
+			array_walk($allowed_extensions, 'file_bulk_import_trim_array_values');
 			
 			$result = $allowed_extensions;	
 		}
@@ -58,7 +58,7 @@
 		return $result;
 	}
 	
-	function zip_uploader_trim_array_values(&$value) 
+	function file_bulk_import_trim_array_values(&$value) 
 	{ 
 	    $value = trim($value); 
 	}

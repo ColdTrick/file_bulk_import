@@ -1,7 +1,7 @@
 <?php
 	global $CONFIG;
 	
-	define("ZIP_UPLOADER_BASEURL", 	$CONFIG->wwwroot."pg/file_bulk_import");
+	define("FILE_BULK_IMPORT_BASEURL", 	$CONFIG->wwwroot."pg/file_bulk_import");
 	
 	include_once(dirname(__FILE__)."/lib/functions.php");
 
@@ -66,14 +66,14 @@
 			if (can_write_to_container($_SESSION['guid'], page_owner()) && isloggedin())
 			{
 				add_submenu_item(elgg_echo('file:upload'), $CONFIG->wwwroot . "pg/file/new/". $page_owner->username);
-				add_submenu_item(elgg_echo('zip_uploader:upload:new'), ZIP_UPLOADER_BASEURL . "/upload/zip/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "/upload/zip/".$page_owner->username);
 			}
 		}
 		elseif(get_context() == 'file')
 		{
 			if (can_write_to_container($_SESSION['guid'], page_owner()) && isloggedin())
 			{
-				add_submenu_item(elgg_echo('zip_uploader:upload:new'), ZIP_UPLOADER_BASEURL . "/upload/zip/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "/upload/zip/".$page_owner->username);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 <?php
 	echo elgg_view('input/securitytoken');
 	
-	$form_body .= '<label>'.elgg_echo("zip_uploader:upload:form:choose").'</label><br />';
+	$form_body .= '<label>'.elgg_echo("file_bulk_import:upload:form:choose").'</label><br />';
 	$form_body .= elgg_view("input/file",array('internalname' => 'zip_file')).'<br />';
 
 
