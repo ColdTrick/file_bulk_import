@@ -68,7 +68,7 @@
 			        
 								zip_entry_close($zip_entry);
 								
-								$extracted = true;
+								$_SESSION['extracted_files'][] = $file_name;
 							}
 						}
 					}
@@ -76,7 +76,7 @@
 			
 				zip_close($zip);
 				
-				if($extracted)
+				if($_SESSION['extracted_files'])
 				{
 					system_message(elgg_echo('zip_uploader:error:fileuploadsuccess'));
 				}

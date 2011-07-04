@@ -45,7 +45,7 @@
 	{
 		$result = false;
 		
-		$allowed_extensions_settings = trim(get_plugin_setting('allowed_extensions', 'zip_uploader'));
+		$allowed_extensions_settings = trim(get_plugin_setting('allowed_extensions', 'file_bulk_import'));
 		
 		if(!empty($allowed_extensions_settings))
 		{
