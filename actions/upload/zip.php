@@ -1,4 +1,5 @@
-<?php 
+<?php
+	set_time_limit(0);
 
 	$allowed_extensions = file_bulk_import_allowed_extensions();
 	
@@ -32,6 +33,12 @@
 			
 			if($zip = zip_open($file))
 			{
+				if (isset($CONFIG->register_objects['object']['file']))
+				{
+					$descr = $CONFIG->register_objects['object']['file'];
+					unset($CONFIG->register_objects['object']['file']);
+				}
+								
 				while($zip_entry = zip_read($zip)) 
 				{
 					if(zip_entry_filesize($zip_entry)>0)
@@ -50,7 +57,9 @@
 							if(in_array($file_extension, $allowed_extensions))
 							{
 					           	$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
-					           	
+							
+									
+									
 								$filehandler = new ElggFile();
 									$filehandler->setFilename($prefix . $file_name);
 																	
@@ -62,6 +71,7 @@
 	
 									$filehandler->open("write");
 									$filehandler->write($buf);
+									
 									$filehandler->save();
 								
 								$filehandler->close();
@@ -75,6 +85,11 @@
 				}
 			
 				zip_close($zip);
+				
+				if(isset($descr))
+				{
+					$CONFIG->register_objects['object']['file'] = $descr;
+				}
 				
 				if($_SESSION['extracted_files'])
 				{
