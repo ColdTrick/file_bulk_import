@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin_manifest>
 	<field key="author" value="ColdTrick IT Solutions" />
-	<field key="version" value="0.1" />
+	<field key="version" value="0.2" />
 	<field key="description" value="Imports and unzips zip files" />
 	<field key="website" value="http://www.coldtrick.com/" />
 	<field key="copyright" value="(C) ColdTrick IT Solutions 2011" />
@@ -18,6 +18,13 @@ Features
 ======================
 Version history
 ======================
+
+0.2 (2011-07-08)
+	- added
+		- uploaded zip file history
+		- delete files per zip extraction
+		- bulk delete
+		
 
 0.1 (2011-06-23):
 	- initial version

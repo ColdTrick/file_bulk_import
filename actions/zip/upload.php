@@ -38,6 +38,15 @@
 					$descr = $CONFIG->register_objects['object']['file'];
 					unset($CONFIG->register_objects['object']['file']);
 				}
+				
+				$zip_object = new UploadedZip();
+					$zip_object->title = $_FILES['zip_file']['name'];
+					$zip_object->description = 'Uploaded Zip';
+									
+					$zip_object->container_guid = $container_guid;								
+					$zip_object->access_id 		= $access_id;
+					
+					$zip_object->save();
 								
 				while($zip_entry = zip_read($zip)) 
 				{
@@ -54,12 +63,10 @@
 		
 						if(zip_entry_open($zip, $zip_entry, "r")) 
 						{
-							if(in_array($file_extension, $allowed_extensions))
+							if(in_array(strtolower($file_extension), $allowed_extensions))
 							{
 					           	$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
-							
-									
-									
+
 								$filehandler = new ElggFile();
 									$filehandler->setFilename($prefix . $file_name);
 																	
@@ -77,6 +84,8 @@
 								$filehandler->close();
 			        
 								zip_entry_close($zip_entry);
+								
+								$zip_object->addRelationship($filehandler->getGUID(), 'file_bulk_import_uploaded_zip_file');
 								
 								$_SESSION['extracted_files'][] = $file_name;
 							}

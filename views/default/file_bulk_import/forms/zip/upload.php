@@ -14,7 +14,7 @@
 	
 	$form = elgg_view('input/form', array(	'internalid' 	=> 'file_bulk_import', 
 											'internalname' 	=> 'file_bulk_import', 
-											'action' 		=> $vars['url'].'action/file_bulk_import/upload/zip', 
+											'action' 		=> $vars['url'].'action/file_bulk_import/zip/upload', 
 											'enctype' 		=> 'multipart/form-data', 
 											'body' 			=> $form_body));
 	

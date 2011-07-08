@@ -1,8 +1,9 @@
 <?php
 	global $CONFIG;
 	
-	define("FILE_BULK_IMPORT_BASEURL", 	$CONFIG->wwwroot."pg/file_bulk_import");
+	define("FILE_BULK_IMPORT_BASEURL", 			$CONFIG->wwwroot."pg/file_bulk_import/");
 	
+	define("FILE_BULK_IMPORT_UPLOADED_ZIP", 	"UploadedZip");	
 
 	function file_bulk_import_init()
 	{
@@ -11,8 +12,16 @@
 		if(is_plugin_enabled('file'))
 		{
 			include_once(dirname(__FILE__)."/lib/functions.php");
+			include_once(dirname(__FILE__)."/classes/UploadedZip.php");
 				
 			register_page_handler("file_bulk_import", 	"file_bulk_import_page_handler");
+			
+			elgg_extend_view("css", "file_bulk_import/css");
+			elgg_extend_view("metatags", "file_bulk_import/metatags");
+			
+			add_subtype('object', UploadedZip::SUBTYPE, FILE_BULK_IMPORT_UPLOADED_ZIP);
+			
+			register_entity_type('object', UploadedZip::SUBTYPE);
 		}
 	}
 	
@@ -25,13 +34,27 @@
 			set_input('username', $page[2]);
 		}
 		
-		if(file_exists(dirname(__FILE__)."/pages/".$page[0]."/".$page[1].".php"))
+		if($page[0] == 'proc')
 		{
-			include(dirname(__FILE__)."/pages/".$page[0]."/".$page[1].".php");
+			if(file_exists(dirname(__FILE__)."/procedures/".$page[1]."/".$page[2].".php"))
+			{
+				include(dirname(__FILE__)."/procedures/".$page[1]."/".$page[2].".php");
+				
+			} else {
+				echo json_encode(array('valid' => 0));
+				exit;
+			}
 		}
-		else
+		else 
 		{
-			forward(REFERER);
+			if(file_exists(dirname(__FILE__)."/pages/".$page[0]."/".$page[1].".php"))
+			{
+				include(dirname(__FILE__)."/pages/".$page[0]."/".$page[1].".php");
+			}
+			else
+			{
+				forward(REFERER);
+			}
 		}
 	}
 
@@ -70,14 +93,16 @@
 			if (can_write_to_container($_SESSION['guid'], page_owner()) && isloggedin())
 			{
 				add_submenu_item(elgg_echo('file:upload'), $CONFIG->wwwroot . "pg/file/new/". $page_owner->username);
-				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "/upload/zip/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "zip/upload/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:uploadedzips'), FILE_BULK_IMPORT_BASEURL . "zip/list/".$page_owner->username);
 			}
 		}
 		elseif(get_context() == 'file')
 		{
 			if (can_write_to_container($_SESSION['guid'], page_owner()) && isloggedin())
 			{
-				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "/upload/zip/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:new'), FILE_BULK_IMPORT_BASEURL . "zip/upload/".$page_owner->username);
+				add_submenu_item(elgg_echo('file_bulk_import:upload:uploadedzips'), FILE_BULK_IMPORT_BASEURL . "zip/list/".$page_owner->username);
 			}
 		}
 	}
@@ -86,4 +111,6 @@
 	register_elgg_event_handler("init", "system", "file_bulk_import_init");
 	register_elgg_event_handler("pagesetup", "system", "file_bulk_import_pagesetup");
 	
-	register_action("file_bulk_import/upload/zip", false,dirname(__FILE__)."/actions/upload/zip.php");
+	register_action("file_bulk_import/zip/upload", false,dirname(__FILE__)."/actions/zip/upload.php");
+	register_action("file_bulk_import/zip/delete", false,dirname(__FILE__)."/actions/zip/delete.php");
+	register_action("file_bulk_import/zip/bulkdelete", false,dirname(__FILE__)."/actions/zip/bulkdelete.php");

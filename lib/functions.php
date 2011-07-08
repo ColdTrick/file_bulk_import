@@ -60,5 +60,5 @@
 	
 	function file_bulk_import_trim_array_values(&$value) 
 	{ 
-	    $value = trim($value); 
+	    $value = trim(strtolower($value)); 
 	}
