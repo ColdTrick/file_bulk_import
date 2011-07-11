@@ -6,6 +6,8 @@ $return['valid'] = false;
 
 $zip_guid = get_input('guid');
 
+$return['guid'] = $zip_guid;
+
 if(!empty($zip_guid) && ($zip = get_entity($zip_guid)))
 {
 	if($zip_files = $zip->getEntitiesFromRelationship('file_bulk_import_uploaded_zip_file', false, false, 0))

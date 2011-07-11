@@ -49,10 +49,15 @@
 		
 		if(!empty($allowed_extensions_settings))
 		{
+			$allowed_extensions_settings = strtolower($allowed_extensions_settings);
 			$allowed_extensions = explode(',', $allowed_extensions_settings);
 			array_walk($allowed_extensions, 'file_bulk_import_trim_array_values');
 			
 			$result = $allowed_extensions;	
+		}
+		else
+		{
+			$result = array('txt','jpg','jpeg','png','bmp','gif','pdf','doc','docx','xls','xlsx','pptx');
 		}
 		
 		return $result;
@@ -60,5 +65,5 @@
 	
 	function file_bulk_import_trim_array_values(&$value) 
 	{ 
-	    $value = trim(strtolower($value)); 
+	    $value = trim($value); 
 	}

@@ -6,15 +6,17 @@ $(function()
 	{
 		clickedElement = $(this);
 		zip_guid = clickedElement.attr('rel');
-		filesElement = clickedElement.parent().parent().find('#files_'+zip_guid);
-		
-		filesElement.toggle();
+
+		$('#files_'+zip_guid).toggle();
 
 		if(clickedElement.attr('loaded') == 'false')
 		{
 			$.getJSON('<?php echo FILE_BULK_IMPORT_BASEURL;?>proc/files/list', {guid: zip_guid}, function(response)
 			{
 				clickedElement.attr('loaded', 'true');
+				
+				filesElement = $('#files_'+response.guid);
+				
 				filesElement.css('height', 'auto');
 				filesElement.css('background', 'none');
 				

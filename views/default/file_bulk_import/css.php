@@ -46,3 +46,9 @@
 	background-repeat: no-repeat;
 	background-position: 50% 50%;
 }
+
+#file_bulk_delete ul
+{
+	margin: 0px;
+	padding: 0px;
+}

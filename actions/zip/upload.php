@@ -65,7 +65,7 @@
 						{
 							if(in_array(strtolower($file_extension), $allowed_extensions))
 							{
-					           	$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
+								$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
 
 								$filehandler = new ElggFile();
 									$filehandler->setFilename($prefix . $file_name);
@@ -88,6 +88,7 @@
 								$zip_object->addRelationship($filehandler->getGUID(), 'file_bulk_import_uploaded_zip_file');
 								
 								$_SESSION['extracted_files'][] = $file_name;
+								$extracted = true;
 							}
 						}
 					}
@@ -100,7 +101,7 @@
 					$CONFIG->register_objects['object']['file'] = $descr;
 				}
 				
-				if($_SESSION['extracted_files'])
+				if($extracted)
 				{
 					system_message(elgg_echo('file_bulk_import:error:fileuploadsuccess'));
 				}
