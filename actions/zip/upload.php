@@ -1,4 +1,7 @@
 <?php
+	error_reporting(E_ALL);
+	ini_set('display_errors', 'on');
+	
 	set_time_limit(0);
 
 	$allowed_extensions = file_bulk_import_allowed_extensions();
@@ -66,23 +69,27 @@
 							if(in_array(strtolower($file_extension), $allowed_extensions))
 							{
 								$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
-
+								
 								$filehandler = new ElggFile();
 									$filehandler->setFilename($prefix . $file_name);
 																	
 									$filehandler->title 			= $file_name;
-									$filehandler->originalfilename 	= $file_name;	
+									$filehandler->originalfilename 	= $file_name;
 									
-									$filehandler->container_guid 	= $container_guid;								
+									$filehandler->container_guid 	= $container_guid;
 									$filehandler->access_id 		= $access_id;
 	
 									$filehandler->open("write");
 									$filehandler->write($buf);
 									
+									$mime_type = mime_content_type($filehandler->getFilenameOnFilestore());
+									$filehandler->setMimeType($mime_type);
+									
 									$filehandler->save();
 								
 								$filehandler->close();
 			        
+								
 								zip_entry_close($zip_entry);
 								
 								$zip_object->addRelationship($filehandler->getGUID(), 'file_bulk_import_uploaded_zip_file');
