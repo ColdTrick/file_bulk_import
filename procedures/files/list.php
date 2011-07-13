@@ -1,5 +1,7 @@
 <?php
 
+global $CONFIG;
+
 $return = array();
 
 $return['valid'] = false;
@@ -31,7 +33,7 @@ if(!empty($zip_guid) && ($zip = get_entity($zip_guid)))
 	
 	$return['content'] = elgg_view('input/form', array(	'internalid' 	=> 'file_bulk_delete', 
 														'internalname' 	=> 'file_bulk_delete', 
-														'action' 		=> '/action/file_bulk_import/zip/bulkdelete',
+														'action' 		=> $CONFIG->wwwroot.'action/file_bulk_import/zip/bulkdelete',
 														'body' 			=> $return['content']));
 }
 

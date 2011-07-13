@@ -1,6 +1,11 @@
 <?php
-	error_reporting(E_ALL);
-	ini_set('display_errors', 'on');
+
+	//global $DB_QUERY_CACHE;
+	global $ENTITY_CACHE;
+	global $DB_PROFILE;
+	
+	//$db_query_cache_backup = $DB_QUERY_CACHE;
+	$entity_cache_backup = $ENTITY_CACHE;
 	
 	set_time_limit(0);
 
@@ -69,10 +74,11 @@
 							if(in_array(strtolower($file_extension), $allowed_extensions))
 							{
 								$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
+								$filestorename = elgg_strtolower(time().$file_name);
 								
 								$filehandler = new ElggFile();
-									$filehandler->setFilename($prefix . $file_name);
-																	
+									$filehandler->setFilename($prefix . $filestorename);
+
 									$filehandler->title 			= $file_name;
 									$filehandler->originalfilename 	= $file_name;
 									
@@ -81,14 +87,63 @@
 	
 									$filehandler->open("write");
 									$filehandler->write($buf);
-									
+								
 									$mime_type = mime_content_type($filehandler->getFilenameOnFilestore());
-									$filehandler->setMimeType($mime_type);
+									$simple_type = explode('/', $mime_type);
 									
-									$filehandler->save();
+									$filehandler->setMimeType($mime_type);
+									$filehandler->simpletype = $simple_type[0];
+									
+									$file_guid = $filehandler->save();
+									
+									if ($file_guid && $simple_type[0] == "image") 
+									{
+										$thumbnail = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),60,60, true);
+										if ($thumbnail) 
+										{
+											$thumb = new ElggFile();
+											$thumb->setMimeType($mime_type);
+											
+											$thumb->setFilename($prefix."thumb".$filestorename);
+											$thumb->open("write");
+											$thumb->write($thumbnail);
+											$thumb->close();
+											
+											$filehandler->thumbnail = $prefix."thumb".$filestorename;
+											unset($thumbnail);
+										}
+										
+										$thumbsmall = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),153,153, true);
+										if ($thumbsmall) 
+										{
+											$thumb->setFilename($prefix."smallthumb".$filestorename);
+											$thumb->open("write");
+											$thumb->write($thumbsmall);
+											$thumb->close();
+											$filehandler->smallthumb = $prefix."smallthumb".$filestorename;
+											unset($thumbsmall);
+										}
+										
+										$thumblarge = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),600,600, false);
+										if ($thumblarge) 
+										{
+											$thumb->setFilename($prefix."largethumb".$filestorename);
+											$thumb->open("write");
+											$thumb->write($thumblarge);
+											$thumb->close();
+											$filehandler->largethumb = $prefix."largethumb".$filestorename;
+											unset($thumblarge);
+										}
+									}
+									
+									
 								
 								$filehandler->close();
-			        
+								
+								invalidate_cache_for_entity($filehandler->getGUID());
+								//$DB_QUERY_CACHE = $db_query_cache_backup;
+								$ENTITY_CACHE = $entity_cache_backup;
+								$DB_PROFILE = null; 
 								
 								zip_entry_close($zip_entry);
 								

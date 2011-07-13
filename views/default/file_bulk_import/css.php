@@ -47,6 +47,11 @@
 	background-position: 50% 50%;
 }
 
+.file_bulk_import_list_files ul
+{
+	list-style: none;
+}
+
 #file_bulk_delete ul
 {
 	margin: 0px;

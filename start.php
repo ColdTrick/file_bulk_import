@@ -18,8 +18,6 @@
 			
 			elgg_extend_view("css", "file_bulk_import/css");
 			elgg_extend_view("metatags", "file_bulk_import/metatags");
-			
-			add_subtype('object', UploadedZip::SUBTYPE, FILE_BULK_IMPORT_UPLOADED_ZIP);
 		}
 	}
 	

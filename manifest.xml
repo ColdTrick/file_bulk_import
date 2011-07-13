@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin_manifest>
 	<field key="author" value="ColdTrick IT Solutions" />
-	<field key="version" value="0.2.1" />
+	<field key="version" value="0.2.2" />
 	<field key="description" value="Imports and unzips zip files" />
 	<field key="website" value="http://www.coldtrick.com/" />
 	<field key="copyright" value="(C) ColdTrick IT Solutions 2011" />
@@ -19,6 +19,13 @@ Features
 Version history
 ======================
 
+
+
+0.2.2 (2011-07-13)
+	- fixed
+		- file thumbnails are now displayed
+		- minor bug fixes
+		
 0.2.1 (2011-07-11)
 	- fixed
 		- extraction function now checks the files correctly
