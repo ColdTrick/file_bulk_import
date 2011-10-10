@@ -108,5 +108,6 @@
 	register_elgg_event_handler("pagesetup", "system", "file_bulk_import_pagesetup");
 	
 	register_action("file_bulk_import/zip/upload", false,dirname(__FILE__)."/actions/zip/upload.php");
+	register_action("file_bulk_import/zip/uploadtree", false,dirname(__FILE__)."/actions/zip/uploadtree.php");
 	register_action("file_bulk_import/zip/delete", false,dirname(__FILE__)."/actions/zip/delete.php");
 	register_action("file_bulk_import/zip/bulkdelete", false,dirname(__FILE__)."/actions/zip/bulkdelete.php");

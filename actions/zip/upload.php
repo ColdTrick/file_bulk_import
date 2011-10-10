@@ -46,7 +46,7 @@
 					$descr = $CONFIG->register_objects['object']['file'];
 					unset($CONFIG->register_objects['object']['file']);
 				}
-				
+
 				$zip_object = new UploadedZip();
 					$zip_object->title = $_FILES['zip_file']['name'];
 					$zip_object->description = 'Uploaded Zip';
@@ -55,10 +55,10 @@
 					$zip_object->access_id 		= $access_id;
 					
 					$zip_object->save();
-								
+					
 				while($zip_entry = zip_read($zip)) 
 				{
-					if(zip_entry_filesize($zip_entry)>0)
+					//if(zip_entry_filesize($zip_entry)>0)
 					{
 						$name_array = explode('/', zip_entry_name($zip_entry));						
 						$extension_array = explode('.', end($name_array));

@@ -1,5 +1,46 @@
 <?php
 	
+	function zip_file_error_message($errno)
+	{
+		$zipFileFunctionsErrors = array(
+		'ZIPARCHIVE::ER_MULTIDISK' => 'Multi-disk zip archives not supported.',
+		'ZIPARCHIVE::ER_RENAME' => 'Renaming temporary file failed.',
+		'ZIPARCHIVE::ER_CLOSE' => 'Closing zip archive failed',
+		'ZIPARCHIVE::ER_SEEK' => 'Seek error',
+		'ZIPARCHIVE::ER_READ' => 'Read error',
+		'ZIPARCHIVE::ER_WRITE' => 'Write error',
+		'ZIPARCHIVE::ER_CRC' => 'CRC error',
+		'ZIPARCHIVE::ER_ZIPCLOSED' => 'Containing zip archive was closed',
+		'ZIPARCHIVE::ER_NOENT' => 'No such file.',
+		'ZIPARCHIVE::ER_EXISTS' => 'File already exists',
+		'ZIPARCHIVE::ER_OPEN' => 'Can\'t open file',
+		'ZIPARCHIVE::ER_TMPOPEN' => 'Failure to create temporary file.',
+		'ZIPARCHIVE::ER_ZLIB' => 'Zlib error',
+		'ZIPARCHIVE::ER_MEMORY' => 'Memory allocation failure',
+		'ZIPARCHIVE::ER_CHANGED' => 'Entry has been changed',
+		'ZIPARCHIVE::ER_COMPNOTSUPP' => 'Compression method not supported.',
+		'ZIPARCHIVE::ER_EOF' => 'Premature EOF',
+		'ZIPARCHIVE::ER_INVAL' => 'Invalid argument',
+		'ZIPARCHIVE::ER_NOZIP' => 'Not a zip archive',
+		'ZIPARCHIVE::ER_INTERNAL' => 'Internal error',
+		'ZIPARCHIVE::ER_INCONS' => 'Zip archive inconsistent',
+		'ZIPARCHIVE::ER_REMOVE' => 'Can\'t remove file',
+		'ZIPARCHIVE::ER_DELETED' => 'Entry has been deleted',
+		);
+		
+		$errmsg = 'unknown';
+		
+		foreach ($zipFileFunctionsErrors as $constName => $errorMessage)
+		{
+			if (defined($constName) and constant($constName) === $errno)
+			{
+				return 'Zip File Function error: '.$errorMessage;
+			}
+		}
+		
+		return 'Zip File error: unknown';
+	}
+	
 	function file_bulk_import_allowed_extensions()
 	{
 		$result = false;
@@ -251,4 +292,366 @@
 	      #-- done
 	      return $type;
 	   }
+	}
+	
+	
+	
+	function file_bulk_import_get_folders($container_guid = 0)
+	{
+		$result = false;
+		
+		if(empty($container_guid))
+		{
+			$container_guid = page_owner();
+		}
+		if(!empty($container_guid))
+		{
+			$options = array(
+				"type" => "object",
+				"subtype" => 'folder',
+				"container_guid" => $container_guid,
+				"limit" => false
+			);
+			
+			if($folders = elgg_get_entities($options))
+			{
+				$parents = array(); 
+
+				foreach($folders as $folder)
+				{
+					$parent_guid = $folder->parent_guid; 
+					
+					if(!empty($parent_guid))
+					{
+						if($temp = get_entity($parent_guid))
+						{
+							if($temp->getSubtype() != FILE_TREE_SUBTYPE)
+							{
+								$parent_guid = 0;
+							}
+						} 
+						else 
+						{
+							$parent_guid = 0;
+						}
+					} 
+					else 
+					{
+						$parent_guid = 0;
+					}
+					
+					if(!array_key_exists($parent_guid, $parents))
+					{
+						$parents[$parent_guid] = array();
+					}
+					
+					$parents[$parent_guid][] = $folder;
+				}
+				
+				$result = file_bulk_import_sort_folders($parents, 0);
+				
+			}
+		}
+		return $result;
+	}
+	
+	function file_bulk_import_sort_folders($folders, $parent_guid = 0)
+	{
+		$result = false;
+		
+		if(array_key_exists($parent_guid, $folders))
+		{
+			$result = array();
+			
+			foreach($folders[$parent_guid] as $subfolder)
+			{
+				$children = file_bulk_import_sort_folders($folders, $subfolder->getGUID());
+				
+				$order = $subfolder->order;
+				if(empty($order))
+				{
+					$order = 0;
+				}
+				
+				while(array_key_exists($order, $result))
+				{
+					$order++;
+				}
+				
+				$result[$order] = array(
+					"folder" => $subfolder,
+					"children" => $children
+				);
+			}
+			
+			ksort($result);
+		}
+		
+		return $result;
+	}
+	
+	function file_bulk_import_build_select_options($folder, $selected = 0, $niveau = 0)
+	{
+		$result = "<option value='0' selected='selected'>Main Folder</option>";
+		
+		$niveau++;
+		
+		if($folder)
+		{
+			if(is_array($folder) && !array_key_exists("children", $folder))
+			{
+				foreach($folder as $folder_item)
+				{
+					$result .= file_tree_build_select_options($folder_item, $selected, $niveau);
+				}
+			} 
+			else 
+			{
+				$folder_item = $folder["folder"];
+				
+				if($selected == $folder_item->getGUID())
+				{
+					$result .= "<option value='" . $folder_item->getGUID() . "' selected='selected'>" . str_repeat("-", $niveau) . " " .  $folder_item->title . "</option>";
+				} 
+				else 
+				{
+					$result .= "<option value='" . $folder_item->getGUID() . "'>" . str_repeat("-", $niveau) . " " .  $folder_item->title . "</option>";
+				}
+				
+				if(!empty($folder["children"])) 
+				{
+					$result .= file_tree_build_select_options($folder["children"], $selected, $niveau + 1);
+				}
+			}
+		}
+		
+		return $result;
+	}
+	
+	function check_foldertitle_exists($title, $parent_guid = 0)
+	{
+		global $CONFIG;
+		
+		$result = false;
+		
+		$entities_options = array(
+						'type' => 'object',
+						'subtype' => 'folder',
+            	 		'owner_guids' => get_loggedin_userid(),
+						'limit' => 1,
+						'joins' => array(
+										"JOIN {$CONFIG->dbprefix}objects_entity oe 	ON e.guid = oe.guid",
+										"JOIN {$CONFIG->dbprefix}metadata datao 	ON datao.entity_guid = e.guid",
+										"JOIN {$CONFIG->dbprefix}metadata datapg 	ON datapg.entity_guid = e.guid",
+		
+										"JOIN {$CONFIG->dbprefix}metastrings msno 	ON datao.name_id = msno.id",
+										"JOIN {$CONFIG->dbprefix}metastrings msvo 	ON datao.value_id = msvo.id",
+		
+										"JOIN {$CONFIG->dbprefix}metastrings msnpg 	ON datapg.name_id = msnpg.id",
+										"JOIN {$CONFIG->dbprefix}metastrings msvpg 	ON datapg.value_id = msvpg.id",
+									),
+						'wheres' => array(
+										"oe.title 		= '$title'",
+										"msno.string 	= 'order'",
+										"msnpg.string 	= 'parent_guid'",
+										"msvpg.string 	= '$parent_guid'",
+									),
+						'order_by' => "msvo.string ASC"
+					);
+					
+		if($entities = elgg_get_entities($entities_options))
+		{
+			$result = $entities[0];
+		}
+		
+		return $result;
+	}
+	
+	function file_bulk_import_create_folders($zip_entry, $parent_guid, $owner_guid)
+	{
+		$zdir = substr(zip_entry_name($zip_entry), 0, -1);
+		if (file_exists($zdir)) 
+		{
+	        return false;
+		}
+	            
+		$sub_folders = explode('/', $zdir);
+		$count = count($sub_folders);
+		
+		if($count == 1)
+		{
+			$entity = check_foldertitle_exists($zdir, $parent_guid);
+
+			if(!$entity)
+			{
+				$directory = new ElggObject();
+				$directory->subtype = 'folder';
+				$directory->owner_guid = get_loggedin_userid();
+				$directory->container_guid = $owner_guid;
+					
+				if($owner_guid)
+				{
+					$owner_entity = get_entity($parent_guid);
+					$directory->access_id = $owner_entity->access_id;
+				}
+				else
+				{
+					$directory->access_id = DEFAULT_ACCESS;
+				}
+						
+				$directory->title = $zdir;
+				$directory->description = $zdir;
+				$directory->parent_guid = $parent_guid;
+						
+				$order = elgg_get_entities_from_metadata(array(
+					"type" => "object",
+					"subtype" => 'folder',
+					"metadata_name" => "parent_guid",
+					"metadata_value" => $parent_guid,
+					"count" => true
+				));
+						
+				$directory->order = $order;
+						
+				$directory->save();
+            }
+		}
+		else
+		{
+			$parent = $parent_guid;
+			foreach($sub_folders as $folder)
+			{
+				if($entity = check_foldertitle_exists($folder, $parent))
+				{
+					$parent = $entity->getGUID();
+				}
+				else
+				{
+	            			
+					$directory = new ElggObject();
+					$directory->subtype = 'folder';
+					$directory->owner_guid = get_loggedin_userid();
+					$directory->container_guid = $owner_guid;
+					
+					if($owner_guid)
+					{
+						$owner_entity = get_entity($parent_guid);
+						$directory->access_id = $owner_entity->access_id;
+					}
+					else
+					{
+						$directory->access_id = DEFAULT_ACCESS;
+					}
+					
+					$directory->title = $folder;
+					$directory->description = $folder;
+					$directory->parent_guid = $parent;
+						
+					$order = elgg_get_entities_from_metadata(array(
+						"type" => "object",
+						"subtype" => 'folder',
+						"metadata_name" => "parent_guid",
+						"metadata_value" => $parent,
+						"count" => true
+					));
+							
+					$directory->order = $order;
+							
+					$directory->save();
+            	}
+			}
+		}
+	}
+	
+	function unzip($file, $parent_guid = 0, $owner_guid)
+	{
+		$extracted = false;
+		
+		$allowed_extensions = file_bulk_import_allowed_extensions();
+		
+		$zipfile = $file['tmp_name'];
+		
+		$zip_object = new UploadedZip();
+		$zip_object->title = $file['name'];
+		$zip_object->description = 'Uploaded Zip';
+						
+		$zip_object->container_guid = $owner_guid;								
+		$zip_object->access_id 		= ACCESS_PUBLIC;
+		
+		$zip_object->save();
+		
+	    $zip = zip_open($zipfile);
+	    while ($zip_entry = zip_read($zip))
+	    {
+	        zip_entry_open($zip, $zip_entry);
+	        if (substr(zip_entry_name($zip_entry), -1) == '/') 
+	        {
+				file_bulk_import_create_folders($zip_entry, $parent_guid, $owner_guid);
+	        }
+	        else 
+	        {
+	            $folder_array = explode('/', zip_entry_name($zip_entry));
+	            
+	            $parent = $parent_guid;
+	            foreach($folder_array as $folder)
+	            {
+		            if($entity = check_foldertitle_exists($folder, $parent))
+					{
+						$parent = $entity->getGUID();
+					}
+					else
+					{
+						if($folder == end($folder_array))
+						{
+							$prefix = "file/";
+							$extension_array = explode('.', $folder);
+							
+							$file_extension				= end($extension_array);
+							$file_size 					= zip_entry_filesize($zip_entry);
+							
+							if(in_array(strtolower($file_extension), $allowed_extensions))
+							{
+								$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
+
+								$filehandler = new ElggFile();
+									$filehandler->setFilename($prefix . $folder);
+																	
+									$filehandler->title 			= $folder;
+									$filehandler->originalfilename 	= $folder;	
+									
+									$filehandler->container_guid 	= $container_guid;
+									
+									if($parent != 0)
+									{
+										$parent_entity = get_entity($parent);
+										$filehandler->access_id 		= $parent_entity->access_id;
+									}
+									else
+									{
+										$filehandler->access_id 		= DEFAULT_ACCESS;
+									}
+									
+	
+									$filehandler->open("write");
+									$filehandler->write($buf);
+									
+									set_input('folder_guid', $parent);
+									
+									$filehandler->save();
+								
+								$filehandler->close();
+												
+								$zip_object->addRelationship($filehandler->getGUID(), 'file_bulk_import_uploaded_zip_file');
+								
+								$extracted = true;
+							}
+						}
+					}
+	            }
+	        }
+	        zip_entry_close($zip_entry);
+	    }
+	    zip_close($zip);
+	    	    
+	    return $extracted;
 	}
