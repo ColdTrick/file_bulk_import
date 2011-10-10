@@ -575,8 +575,17 @@
 		$zip_object->title = $file['name'];
 		$zip_object->description = 'Uploaded Zip';
 						
-		$zip_object->container_guid = $owner_guid;								
-		$zip_object->access_id 		= ACCESS_PUBLIC;
+		$zip_object->container_guid = $owner_guid;
+		
+		if($parent_guid != 0)
+		{
+			$parent_entity 			= get_entity($parent_guid);
+			$zip_object->access_id = $parent_entity->access_id;
+		}
+		else
+		{
+			$zip_object->access_id = DEFAULT_ACCESS;
+		}
 		
 		$zip_object->save();
 		
