@@ -13,15 +13,15 @@
 	
 	$container_guid = get_input('container_guid', get_loggedin_userid());
 	
-	$page_owner = get_entity($container_guid); 
+	$container_entity = get_entity($container_guid); 
 	
-	if($page_owner instanceof ElggUser)
+	if($container_entity instanceof ElggUser)
 	{
 		$access_id = get_default_access();
 	}
-	elseif($page_owner instanceof ElggGroup)
+	elseif($container_entity instanceof ElggGroup)
 	{
-		$access_id = $page_owner->group_acl;
+		$access_id = $container_entity->group_acl;
 	}
 	else
 	{
@@ -83,6 +83,7 @@
 									$filehandler->originalfilename 	= $file_name;
 									
 									$filehandler->container_guid 	= $container_guid;
+									$filehandler->owner_guid		= get_loggedin_userid();
 									$filehandler->access_id 		= $access_id;
 	
 									$filehandler->open("write");

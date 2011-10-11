@@ -428,7 +428,7 @@
 		return $result;
 	}
 	
-	function check_foldertitle_exists($title, $parent_guid = 0)
+	function check_foldertitle_exists($title, $parent_guid = 0, $container_guid)
 	{
 		global $CONFIG;
 		
@@ -437,7 +437,7 @@
 		$entities_options = array(
 						'type' => 'object',
 						'subtype' => 'folder',
-            	 		'owner_guids' => get_loggedin_userid(),
+            	 		'owner_guid' => $container_guid,
 						'limit' => 1,
 						'joins' => array(
 										"JOIN {$CONFIG->dbprefix}objects_entity oe 	ON e.guid = oe.guid",
@@ -467,12 +467,18 @@
 		return $result;
 	}
 	
-	function file_bulk_import_create_folders($zip_entry, $parent_guid, $owner_guid)
+	function file_bulk_import_create_folders($zip_entry, $parent_guid, $container_guid)
 	{
 		$zdir = substr(zip_entry_name($zip_entry), 0, -1);
-		if (file_exists($zdir)) 
+		$container_entity = get_entity($container_guid);
+		
+		if($container_entity instanceof ElggUser)
 		{
-	        return false;
+			$access_id = get_default_access();
+		}
+		elseif($container_entity instanceof ElggGroup)
+		{
+			$access_id = $container_entity->group_acl;
 		}
 	            
 		$sub_folders = explode('/', $zdir);
@@ -480,24 +486,16 @@
 		
 		if($count == 1)
 		{
-			$entity = check_foldertitle_exists($zdir, $parent_guid);
+			$entity = check_foldertitle_exists($zdir, $parent_guid, $container_guid);
 
 			if(!$entity)
 			{
 				$directory = new ElggObject();
 				$directory->subtype = 'folder';
-				$directory->owner_guid = get_loggedin_userid();
-				$directory->container_guid = $owner_guid;
-					
-				if($owner_guid)
-				{
-					$owner_entity = get_entity($parent_guid);
-					$directory->access_id = $owner_entity->access_id;
-				}
-				else
-				{
-					$directory->access_id = DEFAULT_ACCESS;
-				}
+				$directory->owner_guid = $container_guid;
+				$directory->container_guid = $container_guid;
+				
+				$directory->access_id = $access_id;
 						
 				$directory->title = $zdir;
 				$directory->description = $zdir;
@@ -521,7 +519,7 @@
 			$parent = $parent_guid;
 			foreach($sub_folders as $folder)
 			{
-				if($entity = check_foldertitle_exists($folder, $parent))
+				if($entity = check_foldertitle_exists($folder, $parent, $container_guid))
 				{
 					$parent = $entity->getGUID();
 				}
@@ -530,18 +528,11 @@
 	            			
 					$directory = new ElggObject();
 					$directory->subtype = 'folder';
-					$directory->owner_guid = get_loggedin_userid();
-					$directory->container_guid = $owner_guid;
+					$directory->owner_guid = $container_guid;
+					$directory->container_guid = $container_guid;
 					
-					if($owner_guid)
-					{
-						$owner_entity = get_entity($parent_guid);
-						$directory->access_id = $owner_entity->access_id;
-					}
-					else
-					{
-						$directory->access_id = DEFAULT_ACCESS;
-					}
+					$directory->access_id = $access_id;
+						
 					
 					$directory->title = $folder;
 					$directory->description = $folder;
@@ -563,7 +554,7 @@
 		}
 	}
 	
-	function unzip($file, $parent_guid = 0, $owner_guid)
+	function unzip($file, $parent_guid, $container_guid)
 	{
 		$extracted = false;
 		
@@ -574,17 +565,27 @@
 		$zip_object = new UploadedZip();
 		$zip_object->title = $file['name'];
 		$zip_object->description = 'Uploaded Zip';
+		$zip_object->owner_guid = get_loggedin_userid();
 						
-		$zip_object->container_guid = $owner_guid;
+		$zip_object->container_guid = $container_guid;
+		
+		$container_entity = get_entity($container_guid);
 		
 		if($parent_guid != 0)
 		{
-			$parent_entity 			= get_entity($parent_guid);
-			$zip_object->access_id = $parent_entity->access_id;
+			$access_id 				= get_entity($parent_guid);
+			$zip_object->access_id 	= $parent_entity->access_id;
 		}
 		else
 		{
-			$zip_object->access_id = DEFAULT_ACCESS;
+			if($container_entity instanceof ElggUser)
+			{
+				$access_id = get_default_access();
+			}
+			elseif($container_entity instanceof ElggGroup)
+			{
+				$access_id = $container_entity->group_acl;
+			}
 		}
 		
 		$zip_object->save();
@@ -595,7 +596,7 @@
 	        zip_entry_open($zip, $zip_entry);
 	        if (substr(zip_entry_name($zip_entry), -1) == '/') 
 	        {
-				file_bulk_import_create_folders($zip_entry, $parent_guid, $owner_guid);
+				file_bulk_import_create_folders($zip_entry, $parent_guid, $container_guid);
 	        }
 	        else 
 	        {
@@ -604,7 +605,7 @@
 	            $parent = $parent_guid;
 	            foreach($folder_array as $folder)
 	            {
-		            if($entity = check_foldertitle_exists($folder, $parent))
+		            if($entity = check_foldertitle_exists($folder, $parent, $container_guid))
 					{
 						$parent = $entity->getGUID();
 					}
@@ -627,18 +628,10 @@
 																	
 									$filehandler->title 			= $folder;
 									$filehandler->originalfilename 	= $folder;	
+									$filehandler->owner_guid		= get_loggedin_userid();
 									
 									$filehandler->container_guid 	= $container_guid;
-									
-									if($parent != 0)
-									{
-										$parent_entity = get_entity($parent);
-										$filehandler->access_id 		= $parent_entity->access_id;
-									}
-									else
-									{
-										$filehandler->access_id 		= DEFAULT_ACCESS;
-									}
+									$filehandler->access_id			= $access_id;
 									
 	
 									$filehandler->open("write");
@@ -661,6 +654,6 @@
 	        zip_entry_close($zip_entry);
 	    }
 	    zip_close($zip);
-	    	    
+	    
 	    return $extracted;
 	}

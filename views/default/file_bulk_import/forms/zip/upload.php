@@ -8,7 +8,7 @@
 	
 	if(is_plugin_enabled('file_tree'))
 	{
-		$folders = file_bulk_import_get_folders(get_loggedin_userid());
+		$folders = file_bulk_import_get_folders(page_owner_entity()->guid);
 		$options = file_bulk_import_build_select_options($folders);
 		
 		$form_body .= '<select name="file_bulk_import_parent_guid">' . $options . '</select><br />';
@@ -21,7 +21,6 @@
 	}
 
 	$form_body .= elgg_view('input/hidden', array('internalname' => 'container_guid', 'value' => page_owner_entity()->guid));
-	$form_body .= elgg_view('input/hidden', array('internalname' => 'owner', 'value' => page_owner_entity()->guid));
 	
 	$form_body .= elgg_view('input/submit', array('value' => elgg_echo('upload')));
 	
