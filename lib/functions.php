@@ -486,6 +486,7 @@
 		
 		if($count == 1)
 		{
+			$zdir = sanitise_string($zdir);
 			$entity = check_foldertitle_exists($zdir, $parent_guid, $container_guid);
 
 			if(!$entity)
@@ -519,6 +520,7 @@
 			$parent = $parent_guid;
 			foreach($sub_folders as $folder)
 			{
+				$folder = sanitise_string($folder);
 				if($entity = check_foldertitle_exists($folder, $parent, $container_guid))
 				{
 					$parent = $entity->getGUID();
@@ -563,7 +565,7 @@
 		$zipfile = $file['tmp_name'];
 		
 		$zip_object = new UploadedZip();
-		$zip_object->title = $file['name'];
+		$zip_object->title = sanitize_string($file['name']);
 		$zip_object->description = 'Uploaded Zip';
 		$zip_object->owner_guid = get_loggedin_userid();
 						
@@ -605,6 +607,7 @@
 	            $parent = $parent_guid;
 	            foreach($folder_array as $folder)
 	            {
+	            	$folder = sanitize_string($folder);
 		            if($entity = check_foldertitle_exists($folder, $parent, $container_guid))
 					{
 						$parent = $entity->getGUID();

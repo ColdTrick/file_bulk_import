@@ -48,7 +48,7 @@
 				}
 
 				$zip_object = new UploadedZip();
-					$zip_object->title = $_FILES['zip_file']['name'];
+					$zip_object->title = sanitise_string($_FILES['zip_file']['name']);
 					$zip_object->description = 'Uploaded Zip';
 									
 					$zip_object->container_guid = $container_guid;								
@@ -63,7 +63,7 @@
 						$name_array = explode('/', zip_entry_name($zip_entry));						
 						$extension_array = explode('.', end($name_array));
 						
-						$file_name 					= end($name_array);
+						$file_name 					= sanitise_string(end($name_array));
 						$file_extension				= end($extension_array);
 						$file_size 					= zip_entry_filesize($zip_entry);
 						$file_size_compressed 		= zip_entry_compressedsize($zip_entry);
