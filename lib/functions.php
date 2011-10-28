@@ -325,7 +325,7 @@
 					{
 						if($temp = get_entity($parent_guid))
 						{
-							if($temp->getSubtype() != FILE_TREE_SUBTYPE)
+							if($temp->getSubtype() != 'folder')
 							{
 								$parent_guid = 0;
 							}
@@ -527,7 +527,6 @@
 				}
 				else
 				{
-	            			
 					$directory = new ElggObject();
 					$directory->subtype = 'folder';
 					$directory->owner_guid = $container_guid;
@@ -559,6 +558,8 @@
 	function unzip($file, $parent_guid, $container_guid)
 	{
 		$extracted = false;
+		
+		$change_access_parent_guid = $parent_guid;
 		
 		$allowed_extensions = file_bulk_import_allowed_extensions();
 		
@@ -645,8 +646,10 @@
 									$filehandler->save();
 								
 								$filehandler->close();
-												
+								
 								$zip_object->addRelationship($filehandler->getGUID(), 'file_bulk_import_uploaded_zip_file');
+								
+								add_entity_relationship($container_guid, 'folder_of', $filehandler->getGUID());
 								
 								$extracted = true;
 							}
@@ -658,5 +661,70 @@
 	    }
 	    zip_close($zip);
 	    
+	    $change_access_parent_folder = get_entity($change_access_parent_guid);
+	    
+	    file_bulk_import_change_children_access($change_access_parent_folder);
+	    
 	    return $extracted;
+	}
+	
+	function file_bulk_import_change_children_access($folder)
+	{
+		if(!empty($folder) && ($folder instanceof ElggObject))
+		{
+			if($folder->getSubtype() == 'folder')
+			{
+				$options = array(
+					"type" => "object",
+					"subtype" => 'folder',
+					"container_guid" => $folder->getContainer(),
+					"limit" => false,
+					"metadata_name" => "parent_guid",
+					"metadata_value" => $folder->getGUID()
+				);
+				
+				if($children = elgg_get_entities_from_metadata($options))
+				{
+					foreach($children as $child)
+					{
+						$child->access_id = $folder->access_id;
+						$child->save();
+						
+						file_bulk_import_change_children_access($child);
+					}
+				}
+
+				file_bulk_import_change_files_access($folder);
+			}
+		}
+	}
+
+	function file_bulk_import_change_files_access($folder)
+	{
+		if(!empty($folder) && ($folder instanceof ElggObject))
+		{
+			if($folder->getSubtype() == 'folder')
+			{
+				unregister_elgg_event_handler("create", "object", "file_tree_object_handler");
+				unregister_elgg_event_handler("update", "object", "file_tree_object_handler");
+				
+				$options = array(
+					"type" => "object",
+					"subtype" => "file",
+					"container_guid" => $folder->getContainer(),
+					"limit" => false,
+					"relationship" => 'folder_of',
+					"relationship_guid" => $folder->getGUID()
+				);
+				
+				if($files = elgg_get_entities_from_relationship($options))
+				{
+					foreach($files as $file)
+					{
+						$file->access_id = $folder->access_id;
+						$file->save();
+					}
+				}
+			}
+		}	
 	}
