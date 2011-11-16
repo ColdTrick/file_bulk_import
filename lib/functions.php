@@ -623,10 +623,12 @@
 							$file_extension				= end($extension_array);
 							$file_size 					= zip_entry_filesize($zip_entry);
 							
+							
 							if(in_array(strtolower($file_extension), $allowed_extensions))
 							{
 								$buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
-
+							
+								
 								$filehandler = new ElggFile();
 									$filehandler->setFilename($prefix . $folder);
 																	
@@ -644,6 +646,8 @@
 									set_input('folder_guid', $parent);
 									
 									$filehandler->save();
+									
+									$test_guid = $filehandler->getGUID();
 								
 								$filehandler->close();
 								
@@ -652,6 +656,11 @@
 								add_entity_relationship($container_guid, 'folder_of', $filehandler->getGUID());
 								
 								$extracted = true;
+								
+								if($parent == 0)
+								{
+									remove_entity_relationships($test_guid, FILE_TREE_RELATIONSHIP, true);
+								}
 							}
 						}
 					}
@@ -687,6 +696,7 @@
 				{
 					foreach($children as $child)
 					{
+						//echo 'Folder: ' .  $child->title . ' -> ' . $folder->title . '<br />';
 						$child->access_id = $folder->access_id;
 						$child->save();
 						
@@ -721,6 +731,7 @@
 				{
 					foreach($files as $file)
 					{
+						//echo 'File: ' .  $file->title . ' -> ' . $folder->title . '<br />';
 						$file->access_id = $folder->access_id;
 						$file->save();
 					}
