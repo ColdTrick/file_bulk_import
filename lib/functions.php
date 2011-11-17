@@ -643,6 +643,12 @@
 									$filehandler->open("write");
 									$filehandler->write($buf);
 									
+									$mime_type = mime_content_type($filehandler->getFilenameOnFilestore());
+									$simple_type = explode('/', $mime_type);
+									
+									$filehandler->setMimeType($mime_type);
+									$filehandler->simpletype = $simple_type[0];
+									
 									set_input('folder_guid', $parent);
 									
 									$filehandler->save();
@@ -666,8 +672,10 @@
 					}
 	            }
 	        }
+	        
 	        zip_entry_close($zip_entry);
 	    }
+	    
 	    zip_close($zip);
 	    
 	    $change_access_parent_folder = get_entity($change_access_parent_guid);
